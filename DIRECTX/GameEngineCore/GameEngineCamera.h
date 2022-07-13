@@ -26,6 +26,11 @@ public:
 	GameEngineCamera& operator=(const GameEngineCamera& _Other) = delete;
 	GameEngineCamera& operator=(GameEngineCamera&& _Other) noexcept = delete;
 
+	void SetProjectionMode(CAMERAPROJECTIONMODE _Mode)
+	{
+		Mode = _Mode;
+	}
+
 protected:
 	void Start();
 
@@ -35,15 +40,22 @@ private:
 	float4x4 Projection;
 	CAMERAPROJECTIONMODE Mode;
 
+	D3D11_VIEWPORT ViewPortDesc;
+
 	// Projection Data
 	float4 Size;
 	float Near;
 	float Far;
+
+	// Perspective
+	float Fov;
 
 	std::map<int, std::list<class GameEngineRenderer*>> AllRenderer_;
 
 	void Render(float _DeltaTime);
 
 	void PushRenderer(GameEngineRenderer* _Renderer);
+
+	void Release(float _DelataTime);
 };
 

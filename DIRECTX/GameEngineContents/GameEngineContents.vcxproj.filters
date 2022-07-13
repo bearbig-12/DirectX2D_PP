@@ -19,6 +19,12 @@
     <Filter Include="Global">
       <UniqueIdentifier>{5c0d327c-f680-4cd4-a5c1-9a7caec22b46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PreCompile">
+      <UniqueIdentifier>{439c0504-814e-4f90-8507-3f4dacd0226c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Actor\Play\Com">
+      <UniqueIdentifier>{d376050c-9962-43e7-82bd-36fd5f2ad011}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ContentsCore.h">
@@ -42,6 +48,13 @@
     <ClInclude Include="Monster.h">
       <Filter>Actor\Play</Filter>
     </ClInclude>
+    <ClInclude Include="GlobalContentsValue.h" />
+    <ClInclude Include="PreCompile.h">
+      <Filter>PreCompile</Filter>
+    </ClInclude>
+    <ClInclude Include="ScoreTestComponent.h">
+      <Filter>Actor\Play\Com</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ContentsCore.cpp">
@@ -61,6 +74,13 @@
     </ClCompile>
     <ClCompile Include="Monster.cpp">
       <Filter>Actor\Play</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalContentsValue.cpp" />
+    <ClCompile Include="PreCompile.cpp">
+      <Filter>PreCompile</Filter>
+    </ClCompile>
+    <ClCompile Include="ScoreTestComponent.cpp">
+      <Filter>Actor\Play\Com</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -13,7 +13,7 @@ class GameEngineRes : public GameEngineNameObject
 public:
 	// constrcuter destructer
 	GameEngineRes() {}
-	~GameEngineRes() {}
+	virtual ~GameEngineRes() {}
 
 	// delete Function
 	GameEngineRes(const GameEngineRes& _Other) = delete;
@@ -52,8 +52,32 @@ protected:
 	static std::map<std::string, ResType*> NamedRes;
 	static std::list<ResType*> UnNamedRes;
 
-private:
+	static ResType* CreateResName(const std::string& _Name = "") 
+	{
+		ResType* Res = CreateRes(_Name);
+		NamedRes.insert(std::make_pair(Res->GetNameCopy(), Res));
+		return Res;
+	}
 
+	static ResType* CreateResUnName()
+	{
+		ResType* Res = CreateRes();
+		UnNamedRes.push_back(Res);
+		return Res;
+	}
+
+	static ResType* CreateRes(const std::string& _Name = "")
+	{
+		std::string Name = GameEngineString::ToUpperReturn(_Name);
+
+		ResType* NewRes = new ResType();
+		NewRes->SetName(Name);
+
+		return NewRes;
+	}
+
+
+private:
 };
 
 template<typename ResType>

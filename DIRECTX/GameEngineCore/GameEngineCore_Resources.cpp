@@ -1,43 +1,133 @@
+#include "PreCompile.h"
 #include "GameEngineCore.h"
 #include <GameEngineBase/GameEngineWindow.h>
 #include <GameEngineBase/GameEngineInput.h>
 #include <GameEngineBase/GameEngineTime.h>
 #include "GameEngineLevel.h"
+#include "GameEngineVertexs.h"
+#include "GameEngineConstantBuffer.h"
 #include <math.h>
+
 
 // Resources Header
 #include "GameEngineVertexBuffer.h"
 #include "GameEngineIndexBuffer.h"
+#include "GameEngineTexture.h"
+#include "GameEngineRenderTarget.h"
 
-void GameEngineCore::EngineResourcesInitialize()
+#include "GameEngineVertexShader.h"
+#include "GameEnginePixelShader.h"
+#include "GameEngineRasterizer.h"
+#include "GameEngineRenderingPipeLine.h"
+
+void EngineInputLayOut() 
 {
-	// 사각형 박스 에러용 텍스처 등등
-	// 엔진수준에서 기본적으로 지원줘야 한다고 생각하는
-	// 리소스들을 이니셜라이즈하는 단계
+	GameEngineVertex::LayOut.AddInputLayOut("POSITION", DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT);
+	GameEngineVertex::LayOut.AddInputLayOut("COLOR", DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT);
+}
+
+void EngineRasterizer()
+{
+	D3D11_RASTERIZER_DESC Desc = {};
+
+	Desc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+	Desc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
+
+	GameEngineRasterizer::Create("EngineRasterizer", Desc);
+	
+}
+
+void EngineTextureLoad() 
+{
+	GameEngineDirectory Dir;
+
+	Dir.MoveParentToExitsChildDirectory("GameEngineResources");
+	Dir.Move("GameEngineResources");
+	Dir.Move("Texture");
+
+	std::vector<GameEngineFile> Shaders = Dir.GetAllFile();
+
+	for (size_t i = 0; i < Shaders.size(); i++)
+	{
+		GameEngineTexture::Load(Shaders[i].GetFullPath());
+	}
+}
+
+void ShaderCompile()
+{
+	GameEngineDirectory Dir;
+
+	Dir.MoveParentToExitsChildDirectory("GameEngineResources");
+	Dir.Move("GameEngineResources");
+	Dir.Move("GameEngineShader");
+
+	std::vector<GameEngineFile> Shaders = Dir.GetAllFile("hlsl");
+
+	for (size_t i = 0; i < Shaders.size(); i++)
+	{
+		GameEngineShader::AutoCompile(Shaders[i].GetFullPath());
+	}
+
+	//GameEngineVertexShader::create("struct Input
+	//{
+	//	float4 Pos : POSITION;
+	//	float4 Color : COLOR;
+	//};
+
+	//struct Output
+	//{
+	//	float4 Pos : SV_POSITION;
+	//	float4 Color : COLOR;
+	//};
+
+	//Output Color_VS(Input _Input)
+	//{
+	//	// 쉐이더의 경우에는 대부분의 상황에서 형변환이 가능하다.
+	//	// 0
+	//	Output NewOutPut = (Output)0;
+	//	NewOutPut.Pos = _Input.Pos;
+	//	NewOutPut.Color = _Input.Color;
+
+	//	return NewOutPut;
+	//}");
+}
+
+
+
+void EngineRenderingPipeLine()
+{
+	{
+		GameEngineRenderingPipeLine* NewPipe = GameEngineRenderingPipeLine::Create("Color");
+		NewPipe->SetInputAssembler1VertexBuffer("Rect");
+		NewPipe->SetInputAssembler2IndexBuffer("Rect");
+		NewPipe->SetVertexShader("Color.hlsl");
+		NewPipe->SetPixelShader("Color.hlsl");
+		NewPipe->SetRasterizer("EngineRasterizer");
+	}
+}
+
+void EngineMesh() 
+{
 
 	{
-		// 0       1
-
-		//    원점
-		
-		// 3       2
-
-		std::vector<float4> Vertex;
-		Vertex.push_back(float4(-0.5f, 0.5f));
-		Vertex.push_back(float4(0.5f, 0.5f));
-		Vertex.push_back(float4(0.5f, -0.5f));
-		Vertex.push_back(float4(-0.5f, -0.5f));
-
+		std::vector<GameEngineVertex> Vertex;
+		Vertex.push_back({ float4(-0.5f, 0.5f), float4()});
+		Vertex.push_back({ float4(0.5f, 0.5f), float4(1.0f, 0.0f, 0.0f, 1.0f) });
+		Vertex.push_back({ float4(0.5f, -0.5f), float4() });
+		Vertex.push_back({ float4(-0.5f, -0.5f), float4() });
 		GameEngineVertexBuffer::Create("Rect", Vertex);
 	}
 
+	//{
+	//	std::vector<GameEngineVertex> Vertex;
+	//	Vertex.push_back({ float4(-1.0f, 1.0f), float4() });
+	//	Vertex.push_back({ float4(1.0f, 1.0f), float4() });
+	//	Vertex.push_back({ float4(1.0f, -1.0f), float4() });
+	//	Vertex.push_back({ float4(-1.0f, -1.0f), float4() });
+	//	GameEngineVertexBuffer::Create("FullRect", Vertex);
+	//}
+
 	{
-		// 0       1
-
-		//    원점
-
-		// 3       2
-
 		std::vector<int> Index;
 
 		// 첫번째 삼각형
@@ -58,49 +148,43 @@ void GameEngineCore::EngineResourcesInitialize()
 	}
 
 	{
-		// 0       1
-
-		//    원점
-
-		// 3       2
-
-		std::vector<float4> Vertex;
+		std::vector<GameEngineVertex> Vertex;
 		Vertex.resize(24);
 		// 앞면
-		Vertex[0] = float4(-0.5f, 0.5f, 0.5f);
-		Vertex[1] = float4(0.5f, 0.5f, 0.5f);
-		Vertex[2] = float4(0.5f, -0.5f, 0.5f);
-		Vertex[3] = float4(-0.5f, -0.5f, 0.5f);
+		Vertex[0] = { float4(-0.5f, 0.5f, 0.5f) };
+		Vertex[1] = { float4(0.5f, 0.5f, 0.5f) };
+		Vertex[2] = { float4(0.5f, -0.5f, 0.5f) };
+		Vertex[3] = { float4(-0.5f, -0.5f, 0.5f) };
 
 		// 뒷면
-		Vertex[4] = float4::VectorRotationToDegreeXAxis(Vertex[0], 180.f);
-		Vertex[5] = float4::VectorRotationToDegreeXAxis(Vertex[1], 180.f);
-		Vertex[6] = float4::VectorRotationToDegreeXAxis(Vertex[2], 180.f);
-		Vertex[7] = float4::VectorRotationToDegreeXAxis(Vertex[3], 180.f);
+		Vertex[4] = {float4::VectorRotationToDegreeXAxis(Vertex[0].POSITION, 180.f)};
+		Vertex[5] = {float4::VectorRotationToDegreeXAxis(Vertex[1].POSITION, 180.f)};
+		Vertex[6] = {float4::VectorRotationToDegreeXAxis(Vertex[2].POSITION, 180.f)};
+		Vertex[7] = {float4::VectorRotationToDegreeXAxis(Vertex[3].POSITION, 180.f)};
 
 		// 왼쪽
-		Vertex[8] = float4::VectorRotationToDegreeYAxis(Vertex[0], -90.f);
-		Vertex[9] = float4::VectorRotationToDegreeYAxis(Vertex[1], -90.f);
-		Vertex[10] = float4::VectorRotationToDegreeYAxis(Vertex[2], -90.f);
-		Vertex[11] = float4::VectorRotationToDegreeYAxis(Vertex[3], -90.f);
+		Vertex[8] = {float4::VectorRotationToDegreeYAxis(Vertex[0].POSITION, -90.f) };
+		Vertex[9] = {float4::VectorRotationToDegreeYAxis(Vertex[1].POSITION, -90.f) };
+		Vertex[11] = { float4::VectorRotationToDegreeYAxis(Vertex[3].POSITION, -90.f) };
+		Vertex[10] ={ float4::VectorRotationToDegreeYAxis(Vertex[2].POSITION, -90.f) };
 
 		// 오른쪽
-		Vertex[12] = float4::VectorRotationToDegreeYAxis(Vertex[0], 90.f);
-		Vertex[13] = float4::VectorRotationToDegreeYAxis(Vertex[1], 90.f);
-		Vertex[14] = float4::VectorRotationToDegreeYAxis(Vertex[2], 90.f);
-		Vertex[15] = float4::VectorRotationToDegreeYAxis(Vertex[3], 90.f);
+		Vertex[12] = {float4::VectorRotationToDegreeYAxis(Vertex[0].POSITION, 90.f)};
+		Vertex[13] = {float4::VectorRotationToDegreeYAxis(Vertex[1].POSITION, 90.f)};
+		Vertex[14] = {float4::VectorRotationToDegreeYAxis(Vertex[2].POSITION, 90.f)};
+		Vertex[15] = {float4::VectorRotationToDegreeYAxis(Vertex[3].POSITION, 90.f)};
 
 		// 위
-		Vertex[16] = float4::VectorRotationToDegreeXAxis(Vertex[0], -90.f);
-		Vertex[17] = float4::VectorRotationToDegreeXAxis(Vertex[1], -90.f);
-		Vertex[18] = float4::VectorRotationToDegreeXAxis(Vertex[2], -90.f);
-		Vertex[19] = float4::VectorRotationToDegreeXAxis(Vertex[3], -90.f);
+		Vertex[16] = {float4::VectorRotationToDegreeXAxis(Vertex[0].POSITION, -90.f)};
+		Vertex[17] = {float4::VectorRotationToDegreeXAxis(Vertex[1].POSITION, -90.f)};
+		Vertex[18] = {float4::VectorRotationToDegreeXAxis(Vertex[2].POSITION, -90.f)};
+		Vertex[19] = { float4::VectorRotationToDegreeXAxis(Vertex[3].POSITION, -90.f) };
 
 		// 아래
-		Vertex[20] = float4::VectorRotationToDegreeXAxis(Vertex[0], 90.f);
-		Vertex[21] = float4::VectorRotationToDegreeXAxis(Vertex[1], 90.f);
-		Vertex[22] = float4::VectorRotationToDegreeXAxis(Vertex[2], 90.f);
-		Vertex[23] = float4::VectorRotationToDegreeXAxis(Vertex[3], 90.f);
+		Vertex[20] = {float4::VectorRotationToDegreeXAxis(Vertex[0].POSITION, 90.f)};
+		Vertex[21] = {float4::VectorRotationToDegreeXAxis(Vertex[1].POSITION, 90.f)};
+		Vertex[22] = {float4::VectorRotationToDegreeXAxis(Vertex[2].POSITION, 90.f)};
+		Vertex[23] = { float4::VectorRotationToDegreeXAxis(Vertex[3].POSITION, 90.f) };
 
 
 		GameEngineVertexBuffer::Create("Box", Vertex);
@@ -121,12 +205,39 @@ void GameEngineCore::EngineResourcesInitialize()
 
 		GameEngineIndexBuffer::Create("Box", Index);
 	}
+}
+
+void GameEngineCore::EngineResourcesInitialize()
+{
+	// 사각형 박스 에러용 텍스처 등등
+	// 엔진수준에서 기본적으로 지원줘야 한다고 생각하는
+	// 리소스들을 이니셜라이즈하는 단계
+	EngineInputLayOut();
+	EngineMesh();
+	EngineRasterizer();
+	ShaderCompile();
+	EngineTextureLoad();
+
+	EngineRenderingPipeLine();
+
+	// 쉐이더 로드
 
 }
 
 
 void GameEngineCore::EngineResourcesDestroy()
 {
+	GameEngineRenderingPipeLine::ResourcesDestroy();
+
+	GameEnginePixelShader::ResourcesDestroy();
+	GameEngineVertexShader::ResourcesDestroy();
+
 	GameEngineVertexBuffer::ResourcesDestroy();
 	GameEngineIndexBuffer::ResourcesDestroy();
+	GameEngineRenderTarget::ResourcesDestroy();
+	GameEngineTexture::ResourcesDestroy();
+	GameEngineRasterizer::ResourcesDestroy();
+	GameEngineConstantBuffer::ResourcesDestroy();
+
+	GameEngineDevice::Destroy();
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include <GameEngineCore/CoreMinimal.h>
 #include <GameEngineCore/GameEngineCore.h>
 
 // 설명 : 프로그램 자체를 시작하게 한다.
@@ -8,7 +9,7 @@ public:
 	// constrcuter destructer
 	ContentsCore(); 
 	~ContentsCore(); 
-
+	
 	// delete Function
 	ContentsCore(const ContentsCore& _Other) = delete;
 	ContentsCore(ContentsCore&& _Other) noexcept = delete;
